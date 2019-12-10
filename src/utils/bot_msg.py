@@ -20,7 +20,7 @@ class MsgBuilder:
     @staticmethod
     def confirm(text: str, left_action: Action,
                 right_action: Action) -> TemplateSendMessage:
-        return TemplateSendMessage(alt_text="this is a confirm template",
+        return TemplateSendMessage(alt_text="您有新訊息",
                                    template=ConfirmTemplate(
                                        text,
                                        actions=[left_action, right_action]))
@@ -29,14 +29,14 @@ class MsgBuilder:
     def buttons(text: str, actions: List[Action],
                 title=None) -> TemplateSendMessage:
         return TemplateSendMessage(title=None,
-                                   alt_text="this is a buttons template",
+                                   alt_text="您有新訊息",
                                    template=ButtonsTemplate(text,
                                                             actions=actions))
 
     @staticmethod
     def carousel(columns: List) -> TemplateSendMessage:
         return TemplateSendMessage(title=None,
-                                   alt_text="this is a carousel template",
+                                   alt_text="您有新訊息",
                                    template=CarouselTemplate(columns=columns))
 
 

@@ -27,15 +27,16 @@ class Question(metaclass=ABCMeta):
 
 
 class AskStationQuestion(Question):
-    def __init__(self, question: str, name: str = 'ask_station_question'):
+    def __init__(self, question: str, name: str = 'ask_station_question', api=THSR):
         # TODO error_msg
         super().__init__(MsgBuilder.text(question), MsgBuilder.text("查無此車站"),
                          name)
+        self.api=api
 
     def check_answer(self, answer: Event) -> Optional[str]:
         print(answer.message.text)
         try:
-            return THSR.station_info(answer.message.text)['StationID']
+            return self.api.station_info(answer.message.text)['StationID']
         except:
             return None
 
@@ -63,10 +64,10 @@ class ConfirmQuestion(Question):
 
 class QuestionBuilder:
     ASK_START_STATION = \
-        AskStationQuestion("在哪一站搭車?(例如：台北)", name='ask_start_station')
+        AskStationQuestion("在哪一站搭車?(例如：台北)", name='ask_start_station', api=THSR)
 
     ASK_END_STATION = \
-        AskStationQuestion("在哪一站下車?(例如：左營)", name='ask_end_station')
+        AskStationQuestion("在哪一站下車?(例如：左營)", name='ask_end_station', api=THSR)
 
     ASK_NORTH_OR_SOUTH = \
         ConfirmQuestion("往北上或南下?", "北上", "南下", name='ask_north_or_south')

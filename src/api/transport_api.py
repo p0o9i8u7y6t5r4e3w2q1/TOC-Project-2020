@@ -47,6 +47,7 @@ class TransportApi(metaclass=ABCMeta):
                                 params=self.get_params(Maybe.new(params)),
                                 headers=self.get_headers(Maybe.new(headers)))
         response.raise_for_status()
+        print(response.json())
         return response.json()
 
     @abstractmethod
@@ -85,7 +86,7 @@ class THSR_Api(TransportApi):
 
 
 class Metro_Api(TransportApi):
-    trans_type = 'Metro'
+    trans_type = '/Metro'
 
     def all_station_info(self):
         metro_type = 'KRTC'
@@ -99,6 +100,15 @@ class Metro_Api(TransportApi):
         }
         return self.get(f"/Station/{metro_type}", params)[0]
 
+    def query_waiting_time_info(self, station_id: str):
+        metro_type = 'KRTC'
+        params = {
+            '$filter': equal(["StationID"], station_id),
+        }
+        return self.get(f"/LiveBoard/{metro_type}", params)
+
 
 THSR = THSR_Api()
+Metro = Metro_Api()
 # print(THSR.query_train_info_by_time(1030, 1000, pendulum.parse('2019-12-10T10:30')))
+# print(Metro.query_train_info('O13'))
