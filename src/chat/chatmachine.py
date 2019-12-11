@@ -69,4 +69,4 @@ class ChatMachine(Machine):
         return MsgBuilder.buttons(u"需要什麼服務?", actions=actions)
 
 
-chatmachine = ChatMachine([Cs.QUERY_NOW_TRAIN_INFO, Cs.QUERY_METRO_WAITING_INFO])
+chatmachine = ChatMachine([Cs.QUERY_NOW_TRAIN_INFO, Cs.QUERY_TRA_WAITING_INFO, Cs.QUERY_METRO_WAITING_INFO])

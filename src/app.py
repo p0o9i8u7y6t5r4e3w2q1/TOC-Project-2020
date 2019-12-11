@@ -8,7 +8,7 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, FollowEvent, PostbackEvent
 from chat.chatmachine import chatmachine
 from chat.chatmodel import ChatModel
-from utils.bot_msg import MsgBuilder
+from utils.bot_msg import MsgBuilder, ActionBuilder
 from utils.send_msg import send_message
 from database import Database
 import pendulum
@@ -17,7 +17,7 @@ load_dotenv()
 DB = Database.get_instance()
 machine = chatmachine
 app = Flask(__name__, static_url_path="/img")
-hostname = 'https://e9402c21.ngrok.io'
+hostname = os.getenv("HOST_NAME", None)
 # hostname = 'https://panda-transport.herokuapp.com/'
 
 # get channel_secret and channel_access_token from your environment variable
@@ -33,6 +33,9 @@ if channel_access_token is None:
 line_bot_api = LineBotApi(channel_access_token)
 handler = WebhookHandler(channel_secret)
 default_error_msg = MsgBuilder.text("不明白您的意思")
+unkown_error_msg = MsgBuilder.buttons(
+    "無效操作，要回到選項嗎?",
+    actions=[ActionBuilder.postback("回到選項", "to_choices", "回到選項")])
 
 
 @app.route("/webhook", methods=['POST'])
@@ -92,10 +95,13 @@ def handle_postback(event: PostbackEvent):
         return
 
     model = ChatModel(machine, event)
-    # function action function
-    func = getattr(model, action)
-    func()
-    model.save_user()
+    try:
+        # function action function
+        func = getattr(model, action)
+        func()
+        model.save_user()
+    except:
+        model.send_message(unkown_error_msg)
     model.destory()
 
 

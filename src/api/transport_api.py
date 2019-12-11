@@ -47,7 +47,7 @@ class TransportApi(metaclass=ABCMeta):
                                 params=self.get_params(Maybe.new(params)),
                                 headers=self.get_headers(Maybe.new(headers)))
         response.raise_for_status()
-        print(response.json())
+        # print(response.json())
         return response.json()
 
     @abstractmethod
@@ -77,7 +77,8 @@ class THSR_Api(TransportApi):
             greater_or_equal(['OriginStopTime', 'DepartureTime'],
                              time.format("HH:00")),
             '$top': '5',
-            '$order': field(['OriginStopTime', 'DepartureTime'])
+            '$orderby':
+            field(['OriginStopTime', 'DepartureTime'])
         }
         print(params)
         return self.get(
@@ -108,7 +109,36 @@ class Metro_Api(TransportApi):
         return self.get(f"/LiveBoard/{metro_type}", params)
 
 
+class TRA_Api(TransportApi):
+    trans_type = '/TRA'
+
+    def all_station_info(self):
+        self.get(f"/Station")
+
+    def station_info(self, station_name: str):
+        params = {
+            '$filter': equal(["StationName", "Zh_tw"], station_name),
+            '$select': 'StationName,StationID'
+        }
+        return self.get(f"/Station", params)[0]
+
+    def query_waiting_time_info(self, station_id: str):
+        params = {
+            '$top': '10',
+        }
+        return self.get(f"/LiveBoard/Station/{station_id}", params)
+
+
 THSR = THSR_Api()
 Metro = Metro_Api()
+TRA = TRA_Api()
 # print(THSR.query_train_info_by_time(1030, 1000, pendulum.parse('2019-12-10T10:30')))
 # print(Metro.query_train_info('O13'))
+# print(TRA.query_waiting_time_info('4220'))
+
+def DirectionName(code: int):
+    if code == 0:
+        return "北上"
+    elif code == 1:
+        return "南下"
+    return None

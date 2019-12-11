@@ -10,7 +10,7 @@ from database import User
 from transitions import EventData
 from transitions.extensions import HierarchicalGraphMachine as Machine
 from transitions.extensions.nesting import NestedState
-from api.transport_api import THSR, Metro
+from api.transport_api import THSR, Metro, TRA, DirectionName
 from utils.machine import MessageState, ObjectState, Transition
 from utils.bot_msg import MsgBuilder, ActionBuilder
 import pendulum
@@ -122,7 +122,6 @@ class ConversationFunction:
         start_station = answer[0]
         end_station = answer[1]
         result = THSR.query_train_info_by_time(start_station, end_station)
-        print(result)
         carousel_columns = list()
         if len(result) == 0:
             return MsgBuilder.text("今天無其他車次")
@@ -158,6 +157,35 @@ class ConversationFunction:
         action = ActionBuilder.msg("其他服務", "其他服務")
         return ActionBuilder.carousel_column(text=text, title=title,actions=[action])
 
+    @classmethod
+    def query_tra_waiting_time_info(cls, model):
+        answer = model.get_answer()
+        station = answer[0]
+        result = TRA.query_waiting_time_info(station)
+        carousel_columns = list()
+        if len(result) == 0:
+            return MsgBuilder.text("今天無其他車次")
+        for r in result:
+            carousel_columns.append(cls.make_tra_waiting_info_column(r))
+        return MsgBuilder.carousel(carousel_columns)
+
+    @classmethod
+    def make_tra_waiting_info_column(cls, r):
+        dest = f"往{r['EndingStationName']['Zh_tw']}"
+        direction = DirectionName(r['Direction'])
+        delay=''
+        delay_time = r['DelayTime']
+        if delay_time == 0:
+            delay = '準時'
+        else:
+            delay = f"晚{delay_time}分"
+        time = r['ScheduledDepartureTime']
+        tran_type = r['TrainTypeName']['Zh_tw']
+        train_no = f"No.{r['TrainNo']}"
+        action = ActionBuilder.msg("其他服務", "其他服務")
+        return ActionBuilder.carousel_column(text=f"{train_no} {tran_type}\n{direction} {dest}",
+                                             title=f"{time} {delay}",actions=[action])
+
 
 
 def conversation():
@@ -185,6 +213,14 @@ class AppConversations:
                             text=u"查看fsm",
                             trigger="show_fsm")
     QUERY_METRO_WAITING_INFO = \
-        Conversation([AskStationQuestion("要查詢哪個車站?(例如：凹仔底)", name="ask_station", api=Metro)],
+        Conversation([AskStationQuestion("要查詢哪個車站?(例如：凹子底)", name="ask_station", api=Metro)],
                      text="查詢高捷即時等候時間",
+                     trigger="query_metro_waiting",
+                     name="query_metro_waiting",
                      finish_msg=ConversationFunction.query_waiting_time_info)
+    QUERY_TRA_WAITING_INFO = \
+        Conversation([AskStationQuestion("要查詢哪個車站?(例如：高雄)", name="ask_station", api=TRA)],
+                     text="查詢台鐵即時車況",
+                     name="query_tra_waiting",
+                     trigger="query_tra_waiting",
+                     finish_msg=ConversationFunction.query_tra_waiting_time_info)
