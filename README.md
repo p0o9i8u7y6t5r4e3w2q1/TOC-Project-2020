@@ -1,7 +1,115 @@
 
 
-<detail>
 # TOC Project 2020
+
+## Finite State Machine
+
+![fsm](./img/show-fsm.png)
+
+## 主題：簡單的列車查詢
+
+* API來源：https://ptx.transportdata.tw/PTX/
+
+* line id: @672csbza
+
+* 資料庫使用Mongodb
+
+  * 雲端資料庫放在 https://www.mongodb.com/cloud
+
+    > 免費版有500M :heart:
+
+* 到heroku看fsm:https://panda-transport.herokuapp.com/show-fsm
+
+### 功能
+
+1. 依據起訖站、現在時刻查詢高鐵車次
+2. 查詢台鐵某一車站的即時車況
+3. 查詢高捷某一站的即時等候時間
+
+* 格外功能 -> 查看fsm
+  * 可在任意時候查看現在的state
+
+### 環境變數
+
+* LINE_CHANNEL_SECRET
+* LINE_CHANNEL_ACCESS_TOKEN
+* PORT
+  * 讓heroku部署時，使用heroku的port
+* MONGO_URL
+  * 資料庫的連接網址
+* HOST_NAME
+  * 讓傳送fsm圖片到line時，圖片url正確能夠取得server的本地圖片
+
+## Transition遇坑紀錄
+
+> 因transition的問題，所以直接修改一點原碼，一起放上來
+
+Transition: https://github.com/pytransitions/transitions
+
+1. 使用HSM(Hierarchical State Machine)的child HSM裡面不能有internal transition
+
+   > 因為transition的dest是None所造成的問題
+   >
+   > 我改成不用internal transition來避開問題
+
+2. add_model無法執行graph的移動
+
+   > 在原始碼GraphMachine加上push_model來將graph附加到model
+   >
+   > 在原始碼HierarchicalGraphMachine覆寫add_model來將graph附加到model
+
+## pygraphviz環境安裝方法紀錄
+
+### win10 Conda(印象中的安裝方法)
+
+1. `conda create -n linebot python=3.6`
+
+2. `conda activate linebot`
+
+3. `conda install -c alubbock pygraphviz`
+
+   > 安裝這個來源可以省去許多錯誤
+   >
+   > 網址: https://anaconda.org/alubbock/pygraphviz
+
+4. `pip install -r requirements.txt`
+
+### Heroku 部署
+
+#### buildpacks(順序不能變)
+
+1. heroku-community/apt
+
+   > * 用此將格外安裝package放在Aptfile
+   >
+   > * Aptfile至少放這三項：
+   >
+   >   ```
+   >   graphviz
+   >   libgraphviz-dev
+   >   pkg-config
+   >   ```
+   >
+   > * 並且要注意Aptfile不能用windows的換行符號
+   >
+   >   > 相關issue：https://github.com/heroku/heroku-buildpack-apt/issues/53
+
+2. https://github.com/weibeld/heroku-buildpack-graphviz
+
+   > (印象中)只放1無法保存圖片，加上這個就可以
+
+3. heroku/python
+
+   > 安裝python程式所需的依賴包
+
+
+
+
+
+<details>
+<summary><strong>原本README</strong></summary>
+
+------
 
 [![Maintainability](https://api.codeclimate.com/v1/badges/dc7fa47fcd809b99d087/maintainability)](https://codeclimate.com/github/NCKU-CCS/TOC-Project-2020/maintainability)
 
@@ -160,4 +268,4 @@ sudo snap install --classic heroku
 Flask Architecture ❤️ [@Sirius207](https://github.com/Sirius207)
 
 [Line line-bot-sdk-python](https://github.com/line/line-bot-sdk-python/tree/master/examples/flask-echo)
-</detail>
+</details>
